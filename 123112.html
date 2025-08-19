@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Расчетник клиентов полиграфии</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+
+  <!-- Экран входа/регистрации -->
+  <div id="authScreen" class="min-h-screen flex items-center justify-center px-4">
+    <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">🖨️ Полиграфия Tez print</h1>
+        <p class="text-gray-600">Система учета клиентов</p>
+      </div>
+
+      <!-- Форма входа -->
+      <div id="loginForm">
+        <h2 class="text-xl font-semibold text-gray-800 mb-6">Вход в систему</h2>
+        <form id="loginFormElement" class="space-y-4">
+          <input type="email" id="loginUsername" required placeholder="Email"
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+          <input type="password" id="loginPassword" required placeholder="Пароль"
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+          <button type="submit"
+                  class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg">
+            Войти
+          </button>
+        </form>
+        <p class="text-center mt-4 text-sm text-gray-600">
+          Нет аккаунта?
+          <button id="showRegister" class="text-blue-600 hover:text-blue-700 font-medium">Зарегистрироваться</button>
+        </p>
+      </div>
+
+      <!-- Форма регистрации -->
+      <div id="registerForm" class="hidden">
+        <h2 class="text-xl font-semibold text-gray-800 mb-6">Регистрация</h2>
+        <form id="registerFormElement" class="space-y-4">
+          <input type="text" id="registerName" required placeholder="Имя"
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+          <input type="email" id="registerUsername" required placeholder="Email"
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+          <input type="password" id="registerPassword" required placeholder="Пароль"
+                 class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+          <button type="submit"
+                  class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg">
+            Зарегистрироваться
+          </button>
+        </form>
+        <p class="text-center mt-4 text-sm text-gray-600">
+          Уже есть аккаунт?
+          <button id="showLogin" class="text-blue-600 hover:text-blue-700 font-medium">Войти</button>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Основное приложение -->
+  <div id="mainApp" class="hidden">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+      <!-- Заголовок с выходом -->
+      <div class="flex justify-between items-center mb-8">
+        <div>
+          <h1 class="text-4xl font-bold text-gray-800 mb-2">📊 Расчетник клиентов</h1>
+          <p class="text-gray-600">Добро пожаловать, <span id="userName"></span>!</p>
+        </div>
+        <button id="logoutBtn" 
+                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+          🚪 Выйти
+        </button>
+      </div>
+
+      <!-- Навигация по периодам -->
+      <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center space-x-4">
+            <h3 class="text-lg font-semibold text-gray-800">📅 Период:</h3>
+            <select id="periodSelect" 
+                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="today">Сегодня</option>
+              <option value="month">Текущий месяц</option>
+              <option value="custom-day">Выбрать день</option>
+              <option value="custom-month">Выбрать месяц</option>
+            </select>
+            <input type="date" id="customDate" class="hidden px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <input type="month" id="customMonth" class="hidden px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <div class="text-sm text-gray-600" id="currentPeriod"></div>
+        </div>
+      </div>
+
+      <!-- Статистика -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+          <div class="flex items-center">
+            <div class="text-3xl mr-4">👥</div>
+            <div>
+              <p class="text-sm text-gray-600">Клиентов</p>
+              <p class="text-2xl font-bold text-gray-800" id="totalClients">0</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+          <div class="flex items-center">
+            <div class="text-3xl mr-4">💰</div>
+            <div>
+              <p class="text-sm text-gray-600">Выручка</p>
+              <p class="text-2xl font-bold text-gray-800" id="totalRevenue">0 ₽</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+          <div class="flex items-center">
+            <div class="text-3xl mr-4">📈</div>
+            <div>
+              <p class="text-sm text-gray-600">Средний чек</p>
+              <p class="text-2xl font-bold text-gray-800" id="averageCheck">0 ₽</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
+          <div class="flex items-center">
+            <div class="text-3xl mr-4">🏆</div>
+            <div>
+              <p class="text-sm text-gray-600">Лучший день</p>
+              <p class="text-lg font-bold text-gray-800" id="bestDay">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Форма добавления клиента -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <h2 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+            <span class="text-2xl mr-3">➕</span>
+            Добавить клиента
+          </h2>
+          
+          <form id="clientForm" class="space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Имя клиента</label>
+              <input type="text" id="clientName" required 
+                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                     placeholder="Введите имя клиента">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Услуга</label>
+              <select id="serviceType" required 
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+                <option value="">Выберите услугу</option>
+                <option value="Печать визиток">Печать визиток</option>
+                <option value="Печать листовок">Печать листовок</option>
+                <option value="Печать баннеров">Печать баннеров</option>
+                <option value="Печать буклетов">Печать буклетов</option>
+                <option value="Печать календарей">Печать календарей</option>
+                <option value="Печать документов">Печать документов</option>
+                <option value="Открывание тундука">Открывание тундука</option>
+                <option value="Ламинирование">Ламинирование</option>
+                <option value="Переплет">Переплет</option>
+                <option value="Другое">Другое</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Сумма платежа (₽)</label>
+              <input type="number" id="paymentAmount" required min="0" step="0.01"
+                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                     placeholder="0.00">
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Дата</label>
+              <input type="date" id="paymentDate" required
+                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+            </div>
+            
+            <button type="submit" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center">
+              <span class="mr-2">💾</span>
+              Добавить клиента
+            </button>
+          </form>
+        </div>
+
+        <!-- Список клиентов -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-semibold text-gray-800 flex items-center">
+              <span class="text-2xl mr-3">📋</span>
+              Список клиентов
+            </h2>
+            <div class="flex space-x-2">
+              <button id="exportData" 
+                      class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                📊 Экспорт
+              </button>
+              <button id="clearPeriod" 
+                      class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                🗑️ Очистить
+              </button>
+            </div>
+          </div>
+          
+          <div id="clientsList" class="space-y-3 max-h-96 overflow-y-auto">
+            <div class="text-center text-gray-500 py-8">
+              <div class="text-4xl mb-2">📝</div>
+              <p>Клиенты появятся здесь после добавления</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Фильтры и поиск -->
+      <div class="bg-white rounded-xl shadow-lg p-6 mt-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+          <span class="text-xl mr-3">🔍</span>
+          Фильтры и поиск
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Поиск по имени</label>
+            <input type="text" id="searchName" 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                   placeholder="Введите имя для поиска">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Фильтр по услуге</label>
+            <select id="filterService" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="">Все услуги</option>
+              <option value="Печать визиток">Печать визиток</option>
+              <option value="Печать листовок">Печать листовок</option>
+              <option value="Печать баннеров">Печать баннеров</option>
+              <option value="Печать буклетов">Печать буклетов</option>
+              <option value="Печать календарей">Печать календарей</option>
+              <option value="Печать документов">Печать документов</option>
+              <option value="Открывание тундука">Открывание тундука</option>
+              <option value="Ламинирование">Ламинирование</option>
+              <option value="Переплет">Переплет</option>
+              <option value="Другое">Другое</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Сортировка</label>
+            <select id="sortBy" 
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="date-desc">По дате (новые первые)</option>
+              <option value="date-asc">По дате (старые первые)</option>
+              <option value="amount-desc">По сумме (больше первые)</option>
+              <option value="amount-asc">По сумме (меньше первые)</option>
+              <option value="name-asc">По имени (А-Я)</option>
+              <option value="name-desc">По имени (Я-А)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Статистика по дням (для месячного просмотра) -->
+      <div id="dailyStats" class="bg-white rounded-xl shadow-lg p-6 mt-8 hidden">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+          <span class="text-xl mr-3">📊</span>
+          Статистика по дням
+        </h3>
+        <div id="dailyStatsContent" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <script>
+    // 🔹 Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAE-_HVfjMI5pQ8udhBsw_uBiCA45I15RE",
+      authDomain: "polygraphy-clients.firebaseapp.com",
+      projectId: "polygraphy-clients",
+      storageBucket: "polygraphy-clients.appspot.com",
+      messagingSenderId: "31878834170",
+      appId: "1:31878834170:web:d39b6725356ec5e1ba6643",
+      measurementId: "G-3Z24QJP99H"
+    };
+
+    // Инициализируем Firebase только если еще не инициализирован
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUser = null;
+    let clients = [];
+    let filteredClients = [];
+
+    // Делаем функции глобальными для доступа из HTML
+    window.deleteClient = async function(id) {
+      if (confirm("Вы уверены, что хотите удалить этого клиента?")) {
+        await db.collection("clients").doc(id).delete();
+        loadClients();
+      }
+    };
+
+    // --- Авторизация ---
+    document.getElementById("registerFormElement").addEventListener("submit", async e => {
+      e.preventDefault();
+      const name = document.getElementById("registerName").value;
+      const email = document.getElementById("registerUsername").value;
+      const password = document.getElementById("registerPassword").value;
+      try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        await db.collection("users").doc(userCredential.user.uid).set({ name, email });
+        currentUser = { id: userCredential.user.uid, name };
+        showMainApp();
+      } catch (err) { 
+        console.error("Ошибка регистрации:", err);
+        alert("Ошибка регистрации: " + err.message); 
+      }
+    });
+
+    document.getElementById("loginFormElement").addEventListener("submit", async e => {
+      e.preventDefault();
+      const email = document.getElementById("loginUsername").value;
+      const password = document.getElementById("loginPassword").value;
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const docSnap = await db.collection("users").doc(userCredential.user.uid).get();
+        if (docSnap.exists) {
+          currentUser = { id: userCredential.user.uid, ...docSnap.data() };
+          showMainApp();
+        } else {
+          throw new Error("Данные пользователя не найдены");
+        }
+      } catch (err) { 
+        console.error("Ошибка входа:", err);
+        alert("Ошибка входа: " + err.message); 
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      try {
+        await auth.signOut();
+        currentUser = null;
+        showAuthScreen();
+      } catch (err) {
+        console.error("Ошибка выхода:", err);
+      }
+    });
+
+    // --- Клиенты ---
+    async function loadClients() {
+      try {
+        const snapshot = await db.collection("clients")
+          .where("userId", "==", currentUser.id)
+          .get();
+        clients = snapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          ...doc.data(),
+          date: doc.data().date || new Date().toISOString().split('T')[0]
+        }));
+        applyFilters();
+      } catch (err) {
+        console.error("Ошибка загрузки клиентов:", err);
+        alert("Ошибка загрузки данных клиентов");
+      }
+    }
+
+    async function saveClient(client) {
+      try {
+        await db.collection("clients").add({
+          ...client,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        loadClients();
+      } catch (err) {
+        console.error("Ошибка сохранения клиента:", err);
+        alert("Ошибка сохранения данных клиента");
+      }
+    }
+
+    function displayClients() {
+      const list = document.getElementById("clientsList");
+      
+      if (filteredClients.length === 0) {
+        list.innerHTML = `
+          <div class="text-center text-gray-500 py-8">
+            <div class="text-4xl mb-2">📝</div>
+            <p>Клиенты не найдены</p>
+          </div>
+        `;
+        return;
+      }
+      
+      list.innerHTML = filteredClients.map(c => `
+        <div class="bg-gray-50 p-4 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
+          <div>
+            <b>${c.name}</b> — ${c.service} — ${c.amount.toFixed(2)} ₽ (${formatDate(c.date)})
+          </div>
+          <button onclick="deleteClient('${c.id}')" class="text-red-500 hover:text-red-700 transition-colors">🗑️</button>
+        </div>
+      `).join("");
+      
+      updateStatistics();
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return "нет даты";
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ru-RU');
+    }
+
+    function updateStatistics() {
+      const totalClients = filteredClients.length;
+      const totalRevenue = filteredClients.reduce((sum, c) => sum + c.amount, 0);
+      const averageCheck = totalClients > 0 ? totalRevenue / totalClients : 0;
+      
+      document.getElementById("totalClients").textContent = totalClients;
+      document.getElementById("totalRevenue").textContent = totalRevenue.toFixed(2) + " ₽";
+      document.getElementById("averageCheck").textContent = averageCheck.toFixed(2) + " ₽";
+      
+      // Находим лучший день
+      if (filteredClients.length > 0) {
+        const daysRevenue = {};
+        filteredClients.forEach(c => {
+          daysRevenue[c.date] = (daysRevenue[c.date] || 0) + c.amount;
+        });
+        
+        const bestDay = Object.entries(daysRevenue).reduce((best, [date, revenue]) => 
+          revenue > best.revenue ? { date, revenue } : best, { date: "", revenue: 0 });
+        
+        document.getElementById("bestDay").textContent = `${formatDate(bestDay.date)} (${bestDay.revenue.toFixed(2)} ₽)`;
+      } else {
+        document.getElementById("bestDay").textContent = "-";
+      }
+    }
+
+    function applyFilters() {
+      const nameSearch = document.getElementById("searchName").value.toLowerCase();
+      const serviceFilter = document.getElementById("filterService").value;
+      const sortBy = document.getElementById("sortBy").value;
+      
+      // Фильтрация
+      filteredClients = clients.filter(c => {
+        const nameMatch = c.name.toLowerCase().includes(nameSearch);
+        const serviceMatch = !serviceFilter || c.service === serviceFilter;
+        return nameMatch && serviceMatch;
+      });
+      
+      // Сортировка
+      filteredClients.sort((a, b) => {
+        switch (sortBy) {
+          case "date-desc": return new Date(b.date) - new Date(a.date);
+          case "date-asc": return new Date(a.date) - new Date(b.date);
+          case "amount-desc": return b.amount - a.amount;
+          case "amount-asc": return a.amount - b.amount;
+          case "name-asc": return a.name.localeCompare(b.name);
+          case "name-desc": return b.name.localeCompare(a.name);
+          default: return 0;
+        }
+      });
+      
+      displayClients();
+    }
+
+    // --- UI ---
+    function showAuthScreen() {
+      document.getElementById("authScreen").classList.remove("hidden");
+      document.getElementById("mainApp").classList.add("hidden");
+    }
+
+    function showMainApp() {
+      document.getElementById("authScreen").classList.add("hidden");
+      document.getElementById("mainApp").classList.remove("hidden");
+      document.getElementById("userName").textContent = currentUser.name;
+      
+      // Установка текущей даты по умолчанию
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById("paymentDate").value = today;
+      
+      loadClients();
+    }
+
+    // --- Форма клиента ---
+    document.getElementById("clientForm").addEventListener("submit", e => {
+      e.preventDefault();
+      const client = {
+        name: document.getElementById("clientName").value,
+        service: document.getElementById("serviceType").value,
+        amount: parseFloat(document.getElementById("paymentAmount").value),
+        date: document.getElementById("paymentDate").value,
+        userId: currentUser.id
+      };
+      saveClient(client);
+      e.target.reset();
+    });
+
+    // --- Переключение форм ---
+    document.getElementById("showRegister").onclick = () => {
+      document.getElementById("loginForm").classList.add("hidden");
+      document.getElementById("registerForm").classList.remove("hidden");
+    };
+    document.getElementById("showLogin").onclick = () => {
+      document.getElementById("registerForm").classList.add("hidden");
+      document.getElementById("loginForm").classList.remove("hidden");
+    };
+
+    // --- Фильтры и сортировка ---
+    document.getElementById("searchName").addEventListener("input", applyFilters);
+    document.getElementById("filterService").addEventListener("change", applyFilters);
+    document.getElementById("sortBy").addEventListener("change", applyFilters);
+
+    // --- Экспорт данных ---
+    document.getElementById("exportData").addEventListener("click", () => {
+      if (filteredClients.length === 0) {
+        alert("Нет данных для экспорта");
+        return;
+      }
+      
+      let csv = "Имя,Услуга,Сумма,Дата\n";
+      filteredClients.forEach(c => {
+        csv += `"${c.name}","${c.service}",${c.amount},"${c.date}"\n`;
+      });
+      
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `clients_${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+    });
+
+    // --- Очистка данных за период ---
+    document.getElementById("clearPeriod").addEventListener("click", async () => {
+      if (confirm("Вы уверены, что хотите удалить всех клиентов за выбранный период?")) {
+        try {
+          const batch = db.batch();
+          filteredClients.forEach(c => {
+            const ref = db.collection("clients").doc(c.id);
+            batch.delete(ref);
+          });
+          await batch.commit();
+          loadClients();
+        } catch (err) {
+          console.error("Ошибка удаления:", err);
+          alert("Ошибка при удалении данных");
+        }
+      }
+    });
+
+    // --- Периоды ---
+    document.getElementById("periodSelect").addEventListener("change", function() {
+      document.getElementById("customDate").classList.add("hidden");
+      document.getElementById("customMonth").classList.add("hidden");
+      
+      if (this.value === "custom-day") {
+        document.getElementById("customDate").classList.remove("hidden");
+      } else if (this.value === "custom-month") {
+        document.getElementById("customMonth").classList.remove("hidden");
+      }
+      
+      applyFilters();
+    });
+
+    // Инициализация при загрузке
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        db.collection("users").doc(user.uid).get()
+          .then(doc => {
+            if (doc.exists) {
+              currentUser = { id: user.uid, ...doc.data() };
+              showMainApp();
+            } else {
+              console.error("Данные пользователя не найдены");
+              auth.signOut();
+            }
+          })
+          .catch(err => {
+            console.error("Ошибка загрузки пользователя:", err);
+            alert("Ошибка загрузки данных пользователя");
+          });
+      } else {
+        showAuthScreen();
+      }
+    });
+
+    // Установка текущей даты при загрузке
+    window.addEventListener('DOMContentLoaded', () => {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById("paymentDate").value = today;
+    });
+  </script>
+</body>
+</html>
